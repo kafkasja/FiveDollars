@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Family App",
+    "slug": "family-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f0f13"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yourfamily.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f0f13"
+      },
+      "package": "com.yourfamily.app"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0f0f13"
+        }
+      ]
+    ],
+    "scheme": "familyapp",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

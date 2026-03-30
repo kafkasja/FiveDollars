@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getProfiles, getTransactions, getAllTransactions, createTransaction, calculateBalance } from '@/lib/database';
 import type { Profile, Balance, Transaction } from '@/types';

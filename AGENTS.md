@@ -5,12 +5,10 @@ This is a web application called "Family App" for tracking small debts and credi
 
 ---
 
-## Project Structure
-
-### web/ - Next.js Web Application (Recommended for Deployment)
+## Project Structure (Root Directory - Next.js)
 
 ```
-web/
+.                           # Root directory (Next.js web app)
 ├── app/                    # Next.js App Router
 │   ├── layout.tsx         # Root layout
 │   ├── page.tsx          # Profile picker (home page)
@@ -24,14 +22,16 @@ web/
 │   └── index.ts          # TypeScript interfaces
 ├── package.json          # Dependencies
 ├── tailwind.config.js    # Tailwind configuration
+├── postcss.config.js     # PostCSS configuration
 ├── next.config.js        # Next.js configuration
-├── vercel.json           # Vercel deployment config
-└── .env.local           # Environment variables
+├── tsconfig.json         # TypeScript configuration
+├── .env.local           # Environment variables
+└── vercel.json           # Vercel deployment config
 ```
 
-### Original React Native Expo Code (app/, src/, lib/, types/)
+### Legacy React Native Expo Files (app/, src/, lib/, types/)
 
-The original React Native Expo version is still in the root directory but is no longer actively maintained. See the `web/` folder for the current web-based version.
+The original React Native Expo version files still exist in the root directory but are no longer actively maintained. They may conflict with the new Next.js structure. The Next.js app uses `app/`, `lib/`, and `types/` directories at the root.
 
 ---
 
@@ -48,17 +48,20 @@ The original React Native Expo version is still in the root directory but is no 
 - Displays recent transactions
 - Provides payment buttons to add $5 credits/debits
 - Real-time updates via Supabase
+- Includes profile switching functionality
 
 ---
 
-## Key Dependencies (Web)
+## Key Dependencies
 
-- **next**: 14.2.0 - React framework
+- **next**: 14.2.x - React framework
 - **react**: 18.2.0 - UI library
-- **@supabase/supabase-js**: Supabase client
+- **react-dom**: 18.2.0 - DOM bindings for React
+- **@supabase/supabase-js**: 2.48.0 - Supabase client
 - **tailwindcss**: 3.4.0 - Styling
+- **typescript**: 5.3.0 - TypeScript support
 
-## Environment Variables (Web)
+## Environment Variables
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://Yzdtnlfkyklfgcvyjigcs.supabase.co
@@ -78,7 +81,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 ### Development
 ```bash
-cd web
 npm install
 npm run dev
 ```

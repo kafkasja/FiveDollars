@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getProfiles, getTransactions, getAllTransactions, createTransaction, calculateBalance } from '@/lib/database';
 import type { Profile, Balance, Transaction } from '@/types';
@@ -18,6 +18,20 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function Dashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const profileId = searchParams.get('profileId');

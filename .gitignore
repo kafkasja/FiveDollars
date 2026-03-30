@@ -48,4 +48,4 @@ android/.gradle/
 android/app/build/
 
 # Misc
-*.lock
+# Keep lockfiles tracked for reproducible installs

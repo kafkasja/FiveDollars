@@ -12,8 +12,8 @@ export async function getProfiles(): Promise<Profile[]> {
     return data ?? [];
   } catch {
     return [
-      { id: '1', name: 'Blauw', emoji: '🔵', color: '#3b82f6', created_at: '' },
-      { id: '2', name: 'Pink', emoji: '💗', color: '#ec4899', created_at: '' },
+      { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
+      { id: '2', name: 'E.S', emoji: '🐻', color: '#ec4899', created_at: '' },
     ];
   }
 }

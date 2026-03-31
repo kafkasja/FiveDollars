@@ -26,17 +26,21 @@ export default function ProfilePicker() {
   }, []);
 
   useEffect(() => {
+    const savedProfile = localStorage.getItem('family_app_selected_profile_id');
+    if (savedProfile) {
+      router.push(`/dashboard?profileId=${savedProfile}`);
+      return;
+    }
     loadProfiles();
-  }, [loadProfiles]);
+  }, [router, loadProfiles]);
 
   function handleSelectProfile(profile: Profile) {
     localStorage.setItem('family_app_selected_profile_id', profile.id);
     router.push(`/dashboard?profileId=${profile.id}`);
   }
 
-  function handleClearProfile() {
-    localStorage.removeItem('family_app_selected_profile_id');
-    window.location.reload();
+  function handleSwitchProfile() {
+    router.push('/');
   }
 
   if (loading) {
@@ -98,7 +102,7 @@ export default function ProfilePicker() {
         ))}
       </div>
 
-      <button className="profile-picker__switch-btn" onClick={handleClearProfile}>
+      <button className="profile-picker__switch-btn" onClick={handleSwitchProfile}>
         Switch Profile
       </button>
     </div>

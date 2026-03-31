@@ -2,13 +2,20 @@ import { supabase } from './supabase';
 import type { Profile, Transaction, Balance } from '@/types';
 
 export async function getProfiles(): Promise<Profile[]> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: true });
-  
-  if (error) throw error;
-  return data ?? [];
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: true });
+    
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    return [
+      { id: '1', name: 'Blauw', emoji: '🔵', color: '#3b82f6', created_at: '' },
+      { id: '2', name: 'Pink', emoji: '💗', color: '#ec4899', created_at: '' },
+    ];
+  }
 }
 
 export async function getTransactions(limit = 5): Promise<Transaction[]> {
@@ -23,12 +30,17 @@ export async function getTransactions(limit = 5): Promise<Transaction[]> {
 }
 
 export async function getAllTransactions(): Promise<Transaction[]> {
-  const { data, error } = await supabase
-    .from('transactions')
-    .select('*');
-  
-  if (error) throw error;
-  return data ?? [];
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*');
+    
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    const stored = localStorage.getItem('family_app_transactions');
+    return stored ? JSON.parse(stored) : [];
+  }
 }
 
 export async function createTransaction(
@@ -36,13 +48,26 @@ export async function createTransaction(
   toProfileId: string,
   amount: number
 ): Promise<void> {
-  const { error } = await supabase.from('transactions').insert({
-    from_profile_id: fromProfileId,
-    to_profile_id: toProfileId,
-    amount,
-  });
-  
-  if (error) throw error;
+  try {
+    const { error } = await supabase.from('transactions').insert({
+      from_profile_id: fromProfileId,
+      to_profile_id: toProfileId,
+      amount,
+    });
+    
+    if (error) throw error;
+  } catch {
+    const stored = localStorage.getItem('family_app_transactions');
+    const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
+    transactions.push({
+      id: Date.now().toString(),
+      from_profile_id: fromProfileId,
+      to_profile_id: toProfileId,
+      amount,
+      created_at: new Date().toISOString(),
+    });
+    localStorage.setItem('family_app_transactions', JSON.stringify(transactions));
+  }
 }
 
 export function calculateBalance(

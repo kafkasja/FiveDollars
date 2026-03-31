@@ -1,0 +1,118 @@
+.profile-picker {
+  min-height: 100vh;
+  background-color: #0f0f13;
+  padding: 5rem 2rem 2rem;
+}
+
+.profile-picker__title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.profile-picker__subtitle {
+  color: #9ca3af;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.profile-picker__loading {
+  color: #fff;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.profile-picker__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.profile-picker__error-title {
+  color: #f87171;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.profile-picker__error-message {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.profile-picker__retry-btn {
+  background-color: #f0a500;
+  color: #000;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.profile-picker__empty-title {
+  color: #9ca3af;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.profile-picker__empty-message {
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.profile-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.profile-picker__card {
+  aspect-ratio: 1;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.profile-picker__card:active {
+  transform: scale(0.95);
+}
+
+.profile-picker__name {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.profile-picker__switch-btn {
+  display: block;
+  margin: 3rem auto 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}

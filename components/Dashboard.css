@@ -1,0 +1,136 @@
+.dashboard {
+  min-height: 100vh;
+  background-color: #0f0f13;
+  padding: 3rem 1.5rem 2rem;
+}
+
+.dashboard__loading {
+  color: #fff;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.dashboard__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard__greeting {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard__balance-label {
+  font-size: 1.125rem;
+  color: #9ca3af;
+}
+
+.dashboard__other-user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard__other-name {
+  font-size: 1.25rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.dashboard__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard__btn {
+  flex: 1;
+  max-width: 140px;
+  padding: 1rem;
+  border-radius: 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.dashboard__btn:active {
+  transform: scale(0.95);
+}
+
+.dashboard__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dashboard__btn--give {
+  background-color: #ec4899;
+  color: #fff;
+}
+
+.dashboard__btn--receive {
+  background-color: #3b82f6;
+  color: #fff;
+}
+
+.dashboard__transactions {
+  background-color: #16161e;
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard__tx-title {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.dashboard__tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #ffffff10;
+  color: #fff;
+}
+
+.dashboard__tx-item:last-child {
+  border-bottom: none;
+}
+
+.dashboard__tx-label {
+  font-size: 0.9rem;
+}
+
+.dashboard__tx-date {
+  color: #6b7280;
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.dashboard__tx-empty {
+  color: #6b7280;
+  text-align: center;
+  padding: 1rem;
+}
+
+.dashboard__switch {
+  display: block;
+  margin: 0 auto;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}

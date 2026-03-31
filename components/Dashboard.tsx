@@ -88,9 +88,9 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard__header">
-        <div className="dashboard__greeting">Hello {currentProfile?.name}</div>
+        <div className="dashboard__greeting">Merhaba {currentProfile?.name}</div>
         <div className="dashboard__balance-label">
-          {balance === 0 ? 'You are even' : balance > 0 ? `You owe $${balance * 5}` : `You are owed $${Math.abs(balance) * 5}`}
+          {balance === 0 ? 'You are even' : balance > 0 ? `😭 You owe $${balance * 5}` : `🤑 You are owed $${Math.abs(balance) * 5}`}
         </div>
       </div>
 
@@ -129,8 +129,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      <button className="dashboard__switch" onClick={() => router.push('/')}>
-        Switch Profile
+      <button className="dashboard__switch" onClick={() => alert('Rules:\n1. kalp kirmak\n2. kufur etmek\n3. öyglece para artirmak')}>
+        See Rules
       </button>
     </div>
   );

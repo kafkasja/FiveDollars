@@ -8,10 +8,19 @@ const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-let supabaseFailed = false;
+let lastSupabaseFailure = 0;
+const RETRY_DELAY_MS = 5000;
+
+export function isSupabaseConnected(): boolean {
+  return !!(supabase && shouldRetrySupabase());
+}
+
+function shouldRetrySupabase(): boolean {
+  return Date.now() - lastSupabaseFailure > RETRY_DELAY_MS;
+}
 
 export async function getProfiles(): Promise<Profile[]> {
-  if (!supabase || supabaseFailed) {
+  if (!supabase || shouldRetrySupabase()) {
     return [
       { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
       { id: '2', name: 'E.S', emoji: '🐻', color: '#ec4899', created_at: '' },
@@ -25,12 +34,12 @@ export async function getProfiles(): Promise<Profile[]> {
       .order('created_at', { ascending: true });
     
     if (error) {
-      supabaseFailed = true;
+      lastSupabaseFailure = Date.now();
       throw error;
     }
     return data ?? [];
   } catch {
-    supabaseFailed = true;
+    lastSupabaseFailure = Date.now();
     return [
       { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
       { id: '2', name: 'E.S', emoji: '🐻', color: '#ec4899', created_at: '' },
@@ -39,7 +48,7 @@ export async function getProfiles(): Promise<Profile[]> {
 }
 
 export async function getAllTransactions(): Promise<Transaction[]> {
-  if (!supabase || supabaseFailed) {
+  if (!supabase || shouldRetrySupabase()) {
     const stored = localStorage.getItem('family_app_transactions');
     return stored ? JSON.parse(stored) : [];
   }
@@ -51,12 +60,12 @@ export async function getAllTransactions(): Promise<Transaction[]> {
       .order('created_at', { ascending: false });
     
     if (error) {
-      supabaseFailed = true;
+      lastSupabaseFailure = Date.now();
       throw error;
     }
     return data ?? [];
   } catch {
-    supabaseFailed = true;
+    lastSupabaseFailure = Date.now();
     const stored = localStorage.getItem('family_app_transactions');
     return stored ? JSON.parse(stored) : [];
   }
@@ -67,7 +76,7 @@ export async function createTransaction(
   toProfileId: string,
   amount: number
 ): Promise<void> {
-  if (!supabase || supabaseFailed) {
+  if (!supabase || shouldRetrySupabase()) {
     const stored = localStorage.getItem('family_app_transactions');
     const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
     transactions.push({
@@ -89,11 +98,11 @@ export async function createTransaction(
     });
     
     if (error) {
-      supabaseFailed = true;
+      lastSupabaseFailure = Date.now();
       throw error;
     }
   } catch {
-    supabaseFailed = true;
+    lastSupabaseFailure = Date.now();
     const stored = localStorage.getItem('family_app_transactions');
     const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
     transactions.push({

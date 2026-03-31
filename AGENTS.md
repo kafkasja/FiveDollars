@@ -15,9 +15,12 @@ This is a web application called "Family App" for tracking small debts and credi
 │   ├── globals.css       # Global Tailwind styles
 │   └── dashboard/        # Dashboard page
 │       └── page.tsx      # Main app interface
+├── components/             # React components
+│   ├── ProfilePicker.tsx  # Profile selection screen
+│   └── Dashboard.tsx      # Balance and transactions UI
 ├── lib/
 │   ├── supabase.ts       # Supabase client
-│   └── database.ts       # Database operations
+│   └── database.ts       # Database & localStorage operations
 ├── types/
 │   └── index.ts          # TypeScript interfaces
 ├── package.json          # Dependencies
@@ -45,19 +48,22 @@ The original React Native Expo version files still exist in the root directory b
 
 ### app/dashboard/page.tsx (Dashboard)
 - Shows current balance between two profiles
-- Displays recent transactions
+- Displays recent transactions (real-time updates via Supabase)
 - Provides payment buttons to add $5 credits/debits
-- Real-time updates via Supabase
+- **Local-first Persistence**: Transactions are saved to `localStorage` if the internet is down.
+- **Sync Logic**: Automatically pushes local transactions to Supabase once a connection is detected (via `syncLocalStorageToSupabase`).
+- **Data Integrity**: Includes UUID validation to prevent syncing transactions with legacy/fallback profile IDs ("1" and "2").
 - Includes profile switching functionality
 
 ---
 
 ## Key Dependencies
 
-- **next**: 14.2.x - React framework
+- **next**: ^14.2.35 - React framework
 - **react**: 18.2.0 - UI library
 - **react-dom**: 18.2.0 - DOM bindings for React
 - **@supabase/supabase-js**: 2.48.0 - Supabase client
+- **next-pwa**: 5.6.0 - Progressive Web App support
 - **tailwindcss**: 3.4.0 - Styling
 - **typescript**: 5.3.0 - TypeScript support
 
@@ -72,8 +78,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 ## Database Schema
 
-- **profiles** table: id, name, emoji, color, created_at
-- **transactions** table: id, from_profile_id, to_profile_id, amount, note, created_at
+- **profiles** table: id (uuid), name, emoji, color, created_at
+- **transactions** table: id (uuid), from_profile_id (uuid), to_profile_id (uuid), amount (numeric), created_at
+
 
 ---
 
@@ -106,3 +113,30 @@ Access at http://localhost:3000
 - **Free hosting**: Vercel free tier is generous
 - **Same backend**: Uses existing Supabase project
 - **Simpler**: No Expo Go, no builds, no native code
+
+---
+
+## Data Flows
+
+### Profile Selection & Persistence
+- Entry: `app/page.tsx` renders `ProfilePicker.tsx`
+- Action: User taps a profile card
+- Flow: `handleSelectProfile` -> `localStorage.setItem` -> `router.push('/dashboard')`
+- Auth: Local session only (no password required)
+
+### Transaction Creation (Hybrid Local/Cloud)
+- Entry: `Dashboard.tsx` via Give/Receive buttons
+- Flow: `handlePay` -> `createTransaction(lib/database.ts)`
+- Logic: `supabase.insert` with `localStorage` fallback on failure
+
+### Local-to-Cloud Syncing
+- Entry: `Dashboard.tsx` on connection detect or `Sync Now` tap
+- Flow: `syncLocalStorageToSupabase` -> `isValidUuid` check -> batch `supabase.insert`
+- Logic: Filters out fallback IDs ("1", "2") to prevent Supabase `22P02` errors
+- Final: `localStorage.removeItem` on success
+
+### Real-time Balance Calculation
+- Entry: `Dashboard.tsx` component mount
+- Flow: `supabase.channel` subscription -> `postgres_changes` on `transactions`
+- Logic: `loadData` -> `calculateBalance` vs `currentProfile`
+- Display: Reactive update of balance label (Owe/Owed) via state change

@@ -44,6 +44,3 @@ These flows are read by AI research tools — precision over readability.
 - CHANGES.md must be deleted after audit — never leave stale entries behind
 
 Do not ask for confirmation. Execute and report.
-
-After this session, update projects/[name].md in
-~/Documents/Obsidian with what changed today.

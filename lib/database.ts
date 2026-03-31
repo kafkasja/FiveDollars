@@ -4,14 +4,9 @@ import type { Profile, Transaction, Balance } from '@/types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-console.log('[DB] Supabase URL:', supabaseUrl ? 'SET' : 'MISSING');
-console.log('[DB] Supabase Key:', supabaseAnonKey ? 'SET' : 'MISSING');
-
 const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
-
-console.log('[DB] Supabase client created:', supabase ? 'YES' : 'NO');
 
 let lastSupabaseFailure = 0;
 const RETRY_DELAY_MS = 5000;
@@ -36,12 +31,25 @@ export async function syncLocalStorageToSupabase(): Promise<void> {
     const transactions: Transaction[] = JSON.parse(stored);
     if (transactions.length === 0) return;
     
-    console.log('[DB] Syncing', transactions.length, 'transactions from localStorage to Supabase');
+    const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    
+    // Filter out transactions with non-UUID profiles (e.g., fallback profiles "1" and "2")
+    const validTransactions = transactions.filter(
+      tx => isValidUuid(tx.from_profile_id) && isValidUuid(tx.to_profile_id)
+    );
+
+    if (validTransactions.length === 0) {
+      console.log('[DB] No valid UUID transactions to sync, clearing localStorage');
+      localStorage.removeItem('family_app_transactions');
+      return;
+    }
+
+    console.log('[DB] Syncing', validTransactions.length, 'valid transactions from localStorage to Supabase');
     
     // Insert transactions in batches to avoid potential limits
     const batchSize = 20;
-    for (let i = 0; i < transactions.length; i += batchSize) {
-      const batch = transactions.slice(i, i + batchSize);
+    for (let i = 0; i < validTransactions.length; i += batchSize) {
+      const batch = validTransactions.slice(i, i + batchSize);
       
       const { error } = await supabase
         .from('transactions')

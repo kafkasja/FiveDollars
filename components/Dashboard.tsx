@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getProfiles, getAllTransactions, createTransaction, isSupabaseConnected, syncLocalStorageToSupabase } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 import type { Profile, Transaction } from '@/types';
 import './Dashboard.css';
 
@@ -21,6 +22,19 @@ export default function Dashboard() {
   useEffect(() => {
     loadData();
     setConnected(isSupabaseConnected());
+
+    const channel = supabase
+      .channel('transactions-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        () => loadData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {

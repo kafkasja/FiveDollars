@@ -4,23 +4,78 @@ import type { Profile, Transaction, Balance } from '@/types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+console.log('[DB] Supabase URL:', supabaseUrl ? 'SET' : 'MISSING');
+console.log('[DB] Supabase Key:', supabaseAnonKey ? 'SET' : 'MISSING');
+
 const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+
+console.log('[DB] Supabase client created:', supabase ? 'YES' : 'NO');
 
 let lastSupabaseFailure = 0;
 const RETRY_DELAY_MS = 5000;
 
 export function isSupabaseConnected(): boolean {
-  return !!(supabase && shouldRetrySupabase());
+  return supabase !== null && canConnectToSupabase();
 }
 
-function shouldRetrySupabase(): boolean {
+function canConnectToSupabase(): boolean {
+  if (lastSupabaseFailure === 0) return true;
   return Date.now() - lastSupabaseFailure > RETRY_DELAY_MS;
 }
 
+// Sync localStorage transactions to Supabase when connection is restored
+export async function syncLocalStorageToSupabase(): Promise<void> {
+  if (!supabase) return;
+  
+  try {
+    const stored = localStorage.getItem('family_app_transactions');
+    if (!stored) return;
+    
+    const transactions: Transaction[] = JSON.parse(stored);
+    if (transactions.length === 0) return;
+    
+    console.log('[DB] Syncing', transactions.length, 'transactions from localStorage to Supabase');
+    
+    // Insert transactions in batches to avoid potential limits
+    const batchSize = 20;
+    for (let i = 0; i < transactions.length; i += batchSize) {
+      const batch = transactions.slice(i, i + batchSize);
+      
+      const { error } = await supabase
+        .from('transactions')
+        .insert(
+          batch.map(tx => ({
+            from_profile_id: tx.from_profile_id,
+            to_profile_id: tx.to_profile_id,
+            amount: tx.amount,
+            created_at: tx.created_at
+          }))
+        );
+      
+      if (error) {
+        console.error('[DB] Supabase batch insert error:', error);
+        lastSupabaseFailure = Date.now();
+        throw error;
+      }
+    }
+    
+    // Clear localStorage after successful sync
+    localStorage.removeItem('family_app_transactions');
+    console.log('[DB] Successfully synced and cleared localStorage transactions');
+  } catch (err) {
+    console.error('[DB] Exception syncing localStorage to Supabase:', err);
+    lastSupabaseFailure = Date.now();
+    throw err;
+  }
+}
+
 export async function getProfiles(): Promise<Profile[]> {
-  if (!supabase || shouldRetrySupabase()) {
+  console.log('[DB] getProfiles called, supabase:', !!supabase, 'canConnect:', canConnectToSupabase());
+  
+  if (!supabase || !canConnectToSupabase()) {
+    console.log('[DB] Using fallback profiles (hardcoded)');
     return [
       { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
       { id: '2', name: 'E.S', emoji: '🐻', color: '#ec4899', created_at: '' },
@@ -28,17 +83,21 @@ export async function getProfiles(): Promise<Profile[]> {
   }
   
   try {
+    console.log('[DB] Fetching profiles from Supabase...');
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: true });
     
     if (error) {
+      console.error('[DB] Supabase error (profiles):', error);
       lastSupabaseFailure = Date.now();
       throw error;
     }
+    console.log('[DB] Got profiles from Supabase:', data?.length);
     return data ?? [];
-  } catch {
+  } catch (err) {
+    console.error('[DB] Exception fetching profiles:', err);
     lastSupabaseFailure = Date.now();
     return [
       { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
@@ -48,23 +107,30 @@ export async function getProfiles(): Promise<Profile[]> {
 }
 
 export async function getAllTransactions(): Promise<Transaction[]> {
-  if (!supabase || shouldRetrySupabase()) {
+  console.log('[DB] getAllTransactions called, supabase:', !!supabase, 'canConnect:', canConnectToSupabase());
+  
+  if (!supabase || !canConnectToSupabase()) {
     const stored = localStorage.getItem('family_app_transactions');
+    console.log('[DB] Using localStorage fallback, stored:', stored ? 'YES' : 'NO');
     return stored ? JSON.parse(stored) : [];
   }
 
   try {
+    console.log('[DB] Fetching transactions from Supabase...');
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
+      console.error('[DB] Supabase error (transactions):', error);
       lastSupabaseFailure = Date.now();
       throw error;
     }
+    console.log('[DB] Got transactions from Supabase:', data?.length);
     return data ?? [];
-  } catch {
+  } catch (err) {
+    console.error('[DB] Exception fetching transactions:', err);
     lastSupabaseFailure = Date.now();
     const stored = localStorage.getItem('family_app_transactions');
     return stored ? JSON.parse(stored) : [];
@@ -76,7 +142,10 @@ export async function createTransaction(
   toProfileId: string,
   amount: number
 ): Promise<void> {
-  if (!supabase || shouldRetrySupabase()) {
+  console.log('[DB] createTransaction called, supabase:', !!supabase, 'canConnect:', canConnectToSupabase());
+  
+  if (!supabase || !canConnectToSupabase()) {
+    console.log('[DB] Saving to localStorage fallback (NOT SYNCED!)');
     const stored = localStorage.getItem('family_app_transactions');
     const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
     transactions.push({
@@ -91,6 +160,7 @@ export async function createTransaction(
   }
 
   try {
+    console.log('[DB] Inserting transaction to Supabase...');
     const { error } = await supabase.from('transactions').insert({
       from_profile_id: fromProfileId,
       to_profile_id: toProfileId,
@@ -98,10 +168,13 @@ export async function createTransaction(
     });
     
     if (error) {
+      console.error('[DB] Supabase insert error:', error);
       lastSupabaseFailure = Date.now();
       throw error;
     }
-  } catch {
+    console.log('[DB] Transaction saved to Supabase successfully');
+  } catch (err) {
+    console.error('[DB] Exception creating transaction:', err);
     lastSupabaseFailure = Date.now();
     const stored = localStorage.getItem('family_app_transactions');
     const transactions: Transaction[] = stored ? JSON.parse(stored) : [];

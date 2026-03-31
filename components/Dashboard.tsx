@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getProfiles, getAllTransactions, createTransaction, isSupabaseConnected } from '@/lib/database';
+import { getProfiles, getAllTransactions, createTransaction, isSupabaseConnected, syncLocalStorageToSupabase } from '@/lib/database';
 import type { Profile, Transaction } from '@/types';
 import './Dashboard.css';
 
@@ -10,17 +10,25 @@ export default function Dashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const profileId = searchParams.get('profileId');
-  
+   
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     loadData();
     setConnected(isSupabaseConnected());
   }, []);
+
+  useEffect(() => {
+    if (connected) {
+      // When we become connected, try to sync localStorage to Supabase
+      syncLocalStorageToSupabase().catch(console.error);
+    }
+  }, [connected]);
 
   async function loadData() {
     try {
@@ -54,6 +62,19 @@ export default function Dashboard() {
       console.error('Failed to create transaction:', err);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleManualSync() {
+    setSyncing(true);
+    try {
+      await syncLocalStorageToSupabase();
+      // Refetch data to show synced transactions
+      await loadData();
+    } catch (err) {
+      console.error('Failed to sync:', err);
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -92,14 +113,30 @@ export default function Dashboard() {
       <div className="dashboard__header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div className="dashboard__greeting">Merhaba {currentProfile?.name}</div>
-          <div style={{ 
-            fontSize: '10px', 
-            padding: '2px 6px', 
-            borderRadius: '4px',
-            backgroundColor: connected ? '#22c55e' : '#ef4444',
-            color: 'white'
-          }}>
-            {connected ? '☁️ Cloud' : '📱 Local'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ 
+              fontSize: '10px', 
+              padding: '2px 6px', 
+              borderRadius: '4px',
+              backgroundColor: connected ? '#22c55e' : '#ef4444',
+              color: 'white'
+            }}>
+              {connected ? '☁️ Cloud' : '📱 Local'}
+            </div>
+            <button
+              onClick={handleManualSync}
+              disabled={syncing}
+              style={{
+                fontSize: '10px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                backgroundColor: '#6366f1',
+                color: 'white',
+                marginLeft: '8px'
+              }}
+            >
+              {syncing ? 'Syncing...' : 'Sync Now'}
+            </button>
           </div>
         </div>
         <div className="dashboard__balance-label">

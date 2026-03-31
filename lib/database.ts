@@ -1,16 +1,36 @@
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 import type { Profile, Transaction, Balance } from '@/types';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+let supabaseFailed = false;
+
 export async function getProfiles(): Promise<Profile[]> {
+  if (!supabase || supabaseFailed) {
+    return [
+      { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
+      { id: '2', name: 'E.S', emoji: '🐻', color: '#ec4899', created_at: '' },
+    ];
+  }
+  
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: true });
     
-    if (error) throw error;
+    if (error) {
+      supabaseFailed = true;
+      throw error;
+    }
     return data ?? [];
   } catch {
+    supabaseFailed = true;
     return [
       { id: '1', name: 'K.A', emoji: '🐻‍❄️', color: '#3b82f6', created_at: '' },
       { id: '2', name: 'E.S', emoji: '🐻', color: '#ec4899', created_at: '' },
@@ -18,26 +38,25 @@ export async function getProfiles(): Promise<Profile[]> {
   }
 }
 
-export async function getTransactions(limit = 5): Promise<Transaction[]> {
-  const { data, error } = await supabase
-    .from('transactions')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  
-  if (error) throw error;
-  return data ?? [];
-}
-
 export async function getAllTransactions(): Promise<Transaction[]> {
+  if (!supabase || supabaseFailed) {
+    const stored = localStorage.getItem('family_app_transactions');
+    return stored ? JSON.parse(stored) : [];
+  }
+
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select('*');
+      .select('*')
+      .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      supabaseFailed = true;
+      throw error;
+    }
     return data ?? [];
   } catch {
+    supabaseFailed = true;
     const stored = localStorage.getItem('family_app_transactions');
     return stored ? JSON.parse(stored) : [];
   }
@@ -48,6 +67,20 @@ export async function createTransaction(
   toProfileId: string,
   amount: number
 ): Promise<void> {
+  if (!supabase || supabaseFailed) {
+    const stored = localStorage.getItem('family_app_transactions');
+    const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
+    transactions.push({
+      id: Date.now().toString(),
+      from_profile_id: fromProfileId,
+      to_profile_id: toProfileId,
+      amount,
+      created_at: new Date().toISOString(),
+    });
+    localStorage.setItem('family_app_transactions', JSON.stringify(transactions));
+    return;
+  }
+
   try {
     const { error } = await supabase.from('transactions').insert({
       from_profile_id: fromProfileId,
@@ -55,8 +88,12 @@ export async function createTransaction(
       amount,
     });
     
-    if (error) throw error;
+    if (error) {
+      supabaseFailed = true;
+      throw error;
+    }
   } catch {
+    supabaseFailed = true;
     const stored = localStorage.getItem('family_app_transactions');
     const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
     transactions.push({

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getProfiles, getAllTransactions, createTransaction } from '@/lib/database';
+import { getProfiles, getAllTransactions, createTransaction, isSupabaseConnected } from '@/lib/database';
 import type { Profile, Transaction } from '@/types';
 import './Dashboard.css';
 
@@ -15,9 +15,11 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     loadData();
+    setConnected(isSupabaseConnected());
   }, []);
 
   async function loadData() {
@@ -88,7 +90,18 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard__header">
-        <div className="dashboard__greeting">Merhaba {currentProfile?.name}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="dashboard__greeting">Merhaba {currentProfile?.name}</div>
+          <div style={{ 
+            fontSize: '10px', 
+            padding: '2px 6px', 
+            borderRadius: '4px',
+            backgroundColor: connected ? '#22c55e' : '#ef4444',
+            color: 'white'
+          }}>
+            {connected ? '☁️ Cloud' : '📱 Local'}
+          </div>
+        </div>
         <div className="dashboard__balance-label">
           {balance === 0 ? 'You are even' : balance > 0 ? `😭 You owe $${balance * 5}` : `🤑 You are owed $${Math.abs(balance) * 5}`}
         </div>
